@@ -220,43 +220,46 @@ def build_explodata_json(logger: Any, journaldir: str, progress_callback: Any = 
                                 system = currentsystem
                             # AutoScan
                             try:
-                                planetclass = entry["PlanetClass"]
+                                planetclass = entry["PlanetClass"]  # noqa: F841
                                 possibly_sold_data[cmdr].append({"type": "planet",
                                                                  "system": system,
                                                                  "body": entry["BodyName"],
                                                                  "fss": True,
                                                                  "dss": None})
                             except KeyError:
-                                pass
-                            if "Cluster" not in entry["BodyName"]:
-                                # Ignore Cluster scans so we should only get Stars or starlike objects
-                                # { "timestamp":"2025-08-24T14:20:10Z", "event":"Scan", "ScanType":"AutoScan",
-                                # "BodyName":"Synuefe GX-K c24-3 A", "BodyID":1, "Parents":[ {"Null":0} ],
-                                # "StarSystem":"Synuefe GX-K c24-3", "SystemAddress":908687348434,
-                                # "DistanceFromArrivalLS":0.000000, "StarType":"G", "Subclass":5,
-                                # "StellarMass":0.882813, "Radius":603914240.000000,
-                                # "AbsoluteMagnitude":5.321030, "Age_MY":2080,
-                                # "SurfaceTemperature":5538.000000, "Luminosity":"Vab",
-                                # "SemiMajorAxis":406617200374.603271, "Eccentricity":0.055510,
-                                # "OrbitalInclination":77.703166, "Periapsis":40.601332,
-                                # "OrbitalPeriod":638497835.397720, "AscendingNode":93.603429,
-                                # "MeanAnomaly":21.500488, "RotationPeriod":270961.664832,
-                                # "AxialTilt":0.000000, "WasDiscovered":false, "WasMapped":false }
-                                logger.debug(entry)
-                                # Add Star to notsoldexplodata
-                                # check if we already have this entry in sold_explodata
-                                possibly_sold_data[cmdr].append({"type": "star",
-                                                                 "system": system,
-                                                                 "body": entry["BodyName"],
-                                                                 "fss": True,
-                                                                 "dss": None})
-                            if "Cluster" in entry["BodyName"]:
-                                possibly_sold_data[cmdr].append({"type": "cluster",
-                                                                 "system": system,
-                                                                 "body": entry["BodyName"],
-                                                                 "fss": True,
-                                                                 "dss": None})
+                                if "Cluster" not in entry["BodyName"]:
+                                    # Ignore Cluster scans so we should only get Stars or starlike objects
+                                    # { "timestamp":"2025-08-24T14:20:10Z", "event":"Scan", "ScanType":"AutoScan",
+                                    # "BodyName":"Synuefe GX-K c24-3 A", "BodyID":1, "Parents":[ {"Null":0} ],
+                                    # "StarSystem":"Synuefe GX-K c24-3", "SystemAddress":908687348434,
+                                    # "DistanceFromArrivalLS":0.000000, "StarType":"G", "Subclass":5,
+                                    # "StellarMass":0.882813, "Radius":603914240.000000,
+                                    # "AbsoluteMagnitude":5.321030, "Age_MY":2080,
+                                    # "SurfaceTemperature":5538.000000, "Luminosity":"Vab",
+                                    # "SemiMajorAxis":406617200374.603271, "Eccentricity":0.055510,
+                                    # "OrbitalInclination":77.703166, "Periapsis":40.601332,
+                                    # "OrbitalPeriod":638497835.397720, "AscendingNode":93.603429,
+                                    # "MeanAnomaly":21.500488, "RotationPeriod":270961.664832,
+                                    # "AxialTilt":0.000000, "WasDiscovered":false, "WasMapped":false }
+                                    logger.debug(entry)
+                                    # Add Star to notsoldexplodata
+                                    # check if we already have this entry in sold_explodata
+                                    possibly_sold_data[cmdr].append({"type": "star",
+                                                                     "system": system,
+                                                                     "body": entry["BodyName"],
+                                                                     "fss": True,
+                                                                     "dss": None})
+                                if "Cluster" in entry["BodyName"]:
+                                    possibly_sold_data[cmdr].append({"type": "cluster",
+                                                                     "system": system,
+                                                                     "body": entry["BodyName"],
+                                                                     "fss": True,
+                                                                     "dss": None})
                         if entry["ScanType"] == "Detailed":
+                            try:
+                                system = entry["StarSystem"]
+                            except KeyError:
+                                system = currentsystem
                             # { "timestamp":"2025-08-24T14:17:28Z", "event":"Scan", "ScanType":"Detailed",
                             # "BodyName":"Synuefe PK-V b48-0 7", "BodyID":8, "Parents":[ {"Star":0} ],
                             # "StarSystem":"Synuefe PK-V b48-0", "SystemAddress":672027125153,
@@ -293,13 +296,13 @@ def build_explodata_json(logger: Any, journaldir: str, progress_callback: Any = 
                             not_found = True
 
                             for scan in possibly_sold_data[cmdr]:
-                                if (scan["body"] == entry["BodyName"] and scan["system"] == entry["StarSystem"]):
+                                if (scan["body"] == entry["BodyName"] and scan["system"] == system):
                                     not_found = False
                                     break
 
                             if not_found:
                                 possibly_sold_data[cmdr].append({"type": "planet",
-                                                                 "system": entry["StarSystem"],
+                                                                 "system": system,
                                                                  "body": entry["BodyName"],
                                                                  "fss": True,
                                                                  "dss": False})
