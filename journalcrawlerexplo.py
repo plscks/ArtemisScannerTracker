@@ -214,7 +214,20 @@ def build_explodata_json(logger: Any, journaldir: str, progress_callback: Any = 
 
                     if entry["event"] == "Scan":
                         if entry["ScanType"] == "AutoScan":
+                            try:
+                                system = entry["StarSystem"]
+                            except KeyError:
+                                system = currentsystem
                             # AutoScan
+                            try:
+                                planetclass = entry["PlanetClass"]
+                                possibly_sold_data[cmdr].append({"type": "planet",
+                                                                 "system": system,
+                                                                 "body": entry["BodyName"],
+                                                                 "fss": True,
+                                                                 "dss": None})
+                            except KeyError:
+                                pass
                             if "Cluster" not in entry["BodyName"]:
                                 # Ignore Cluster scans so we should only get Stars or starlike objects
                                 # { "timestamp":"2025-08-24T14:20:10Z", "event":"Scan", "ScanType":"AutoScan",
@@ -233,13 +246,13 @@ def build_explodata_json(logger: Any, journaldir: str, progress_callback: Any = 
                                 # Add Star to notsoldexplodata
                                 # check if we already have this entry in sold_explodata
                                 possibly_sold_data[cmdr].append({"type": "star",
-                                                                 "system": entry["StarSystem"],
+                                                                 "system": system,
                                                                  "body": entry["BodyName"],
                                                                  "fss": True,
                                                                  "dss": None})
                             if "Cluster" in entry["BodyName"]:
                                 possibly_sold_data[cmdr].append({"type": "cluster",
-                                                                 "system": entry["StarSystem"],
+                                                                 "system": system,
                                                                  "body": entry["BodyName"],
                                                                  "fss": True,
                                                                  "dss": None})
@@ -387,6 +400,10 @@ def build_explodata_json(logger: Any, journaldir: str, progress_callback: Any = 
                         # input()
                         for systementry in entry["Discovered"]:
                             system = systementry["SystemName"]
+                            if system == "":
+                                # No idea what this means. Sometimes there are entries without system...
+                                logger.debug("Found entry without system")
+                                continue
                             firstletter = system[0].lower()
                             if firstletter not in alphabet:
                                 firstletter = "-"
